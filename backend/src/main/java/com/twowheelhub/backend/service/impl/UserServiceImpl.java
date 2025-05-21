@@ -29,8 +29,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public void register(RegisterRequest request) {
 
-        if (userRepository.existsByEmail(request.getEmail()) || userRepository.existsByUsername(request.getUsername())) {
-            throw new UserAlreadyExistsException("Email or username already in use!");
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new UserAlreadyExistsException("Email already in use!");
         }
 
         Role userRole = roleRepository.findByName("ROLE_USER")
@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void login(LoginRequest request) {
 
-        AppUser user = userRepository.findByUsername(request.getUsername())
+        AppUser user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new InvalidCredentialsException("Wrong email or password"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {

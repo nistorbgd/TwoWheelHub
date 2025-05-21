@@ -20,8 +20,8 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<AppUser> getCurrentUser(Authentication authentication) {
-        String username = authentication.getName();
-        AppUser user = userRepository.findByUsername(username)
+        String email = authentication.getName();
+        AppUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         return ResponseEntity.ok(user);

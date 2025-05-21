@@ -4,6 +4,8 @@ import com.twowheelhub.backend.dto.AuthResponse;
 import com.twowheelhub.backend.entity.AppUser;
 import com.twowheelhub.backend.entity.Token;
 import com.twowheelhub.backend.entity.TokenType;
+import com.twowheelhub.backend.exception.InvalidTokenException;
+import com.twowheelhub.backend.exception.InvalidRefreshTokenException;
 import com.twowheelhub.backend.repository.TokenRepository;
 import com.twowheelhub.backend.service.TokenService;
 import io.jsonwebtoken.Jwts;
@@ -14,7 +16,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -42,7 +43,7 @@ public class JwtService {
     public String generateToken(AppUser user, TokenType tokenType) {
         long expiration = (tokenType == TokenType.ACCESS) ? jwtExpiration : refreshExpiration;
         return Jwts.builder()
-                .setSubject(user.getUsername())
+                .setSubject(user.getEmail())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
@@ -55,7 +56,7 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String extractUserName(String token) {
+    public String extractUserEmail(String token) {
         return Jwts
                 .parserBuilder()
                 .setSigningKey(getSignInKey())
@@ -75,9 +76,9 @@ public class JwtService {
                 .getExpiration();
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        String username = extractUserName(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+    public boolean isTokenValid(String token, AppUser appUser) {
+        String userEmail = extractUserEmail(token);
+        return userEmail.equals(appUser.getEmail()) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {
@@ -89,17 +90,17 @@ public class JwtService {
         final String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing or Invalid Authorization Token");
+            throw new InvalidTokenException("Missing or Invalid Authorization Token");
         }
 
         final String refreshToken = authHeader.substring(7);
 
         Token storedRefreshToken = tokenRepository
                 .findByTokenAndTokenType(refreshToken, TokenType.REFRESH)
-                .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+                .orElseThrow(() -> new InvalidRefreshTokenException("Refresh token not found"));
 
         if (storedRefreshToken.isExpired() || storedRefreshToken.isRevoked()) {
-            throw new RuntimeException("Refresh token expired or revoked");
+            throw new InvalidRefreshTokenException("Refresh token expired or revoked");
         }
 
         AppUser user = storedRefreshToken.getUser();
