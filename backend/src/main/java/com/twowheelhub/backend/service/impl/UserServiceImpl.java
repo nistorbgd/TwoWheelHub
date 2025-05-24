@@ -10,9 +10,11 @@ import com.twowheelhub.backend.exception.UserAlreadyExistsException;
 import com.twowheelhub.backend.repository.AppUserRepository;
 import com.twowheelhub.backend.repository.RoleRepository;
 import com.twowheelhub.backend.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -30,6 +32,7 @@ public class UserServiceImpl implements UserService {
     public void register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
+            log.debug("Email: {} already exists!", request.getEmail());
             throw new UserAlreadyExistsException("Email already in use!");
         }
 
@@ -44,6 +47,7 @@ public class UserServiceImpl implements UserService {
                 .role(userRole)
                 .build();
 
+        log.debug("Registering user: {}", user);
         userRepository.save(user);
     }
 

@@ -6,10 +6,12 @@ import com.twowheelhub.backend.entity.TokenType;
 import com.twowheelhub.backend.repository.TokenRepository;
 import com.twowheelhub.backend.service.TokenService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TokenServiceImpl implements TokenService {
@@ -34,6 +36,7 @@ public class TokenServiceImpl implements TokenService {
         if (validUserTokens.isEmpty()) return;
 
         validUserTokens.forEach(token -> {
+            log.debug("Token: {}", token);
             token.setExpired(true);
             token.setRevoked(true);
         });

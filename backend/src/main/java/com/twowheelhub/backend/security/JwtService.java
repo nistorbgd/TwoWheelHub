@@ -15,6 +15,7 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JwtService {
@@ -78,6 +80,7 @@ public class JwtService {
 
     public boolean isTokenValid(String token, AppUser appUser) {
         String userEmail = extractUserEmail(token);
+        log.debug("Checking if user email exists in DB: {}", userEmail);
         return userEmail.equals(appUser.getEmail()) && !isTokenExpired(token);
     }
 
@@ -94,12 +97,14 @@ public class JwtService {
         }
 
         final String refreshToken = authHeader.substring(7);
+        log.debug("Refreshing token: {}", refreshToken);
 
         Token storedRefreshToken = tokenRepository
                 .findByTokenAndTokenType(refreshToken, TokenType.REFRESH)
                 .orElseThrow(() -> new InvalidRefreshTokenException("Refresh token not found"));
 
         if (storedRefreshToken.isExpired() || storedRefreshToken.isRevoked()) {
+            log.debug("Refresh token expired or revoked, stored token: {}", storedRefreshToken);
             throw new InvalidRefreshTokenException("Refresh token expired or revoked");
         }
 

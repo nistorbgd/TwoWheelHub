@@ -4,6 +4,7 @@ import com.twowheelhub.backend.entity.AppUser;
 import com.twowheelhub.backend.entity.AuthProvider;
 import com.twowheelhub.backend.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
 
     private final AppUserRepository userRepository;
