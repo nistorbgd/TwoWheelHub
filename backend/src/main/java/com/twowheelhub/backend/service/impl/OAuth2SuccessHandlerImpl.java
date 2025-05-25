@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -35,6 +36,13 @@ public class OAuth2SuccessHandlerImpl implements AuthenticationSuccessHandler {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
 
+        String registrationId = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
+        AuthProvider provider = switch (registrationId.toLowerCase()) {
+            case "google" -> AuthProvider.GOOGLE;
+            case "facebook" -> AuthProvider.FACEBOOK;
+            default -> AuthProvider.CLASSIC;
+        };
+
         Role userRole = roleRepository.findByName("ROLE_USER")
                 .orElseThrow(() -> new InvalidRoleException("Default role not found!"));
 
@@ -43,7 +51,7 @@ public class OAuth2SuccessHandlerImpl implements AuthenticationSuccessHandler {
                     AppUser newUser = new AppUser();
                     newUser.setEmail(email);
                     newUser.setUsername(oAuth2User.getAttribute("name"));
-                    newUser.setProvider(AuthProvider.GOOGLE);
+                    newUser.setProvider(provider);
                     newUser.setRole(userRole);
                     return userRepository.save(newUser);
                 });
