@@ -6,6 +6,7 @@ import com.twowheelhub.backend.entity.AppUser;
 import com.twowheelhub.backend.entity.AuthProvider;
 import com.twowheelhub.backend.entity.Role;
 import com.twowheelhub.backend.exception.InvalidCredentialsException;
+import com.twowheelhub.backend.exception.InvalidRoleException;
 import com.twowheelhub.backend.exception.UserAlreadyExistsException;
 import com.twowheelhub.backend.repository.AppUserRepository;
 import com.twowheelhub.backend.repository.RoleRepository;
@@ -37,7 +38,7 @@ public class UserServiceImpl implements UserService {
         }
 
         Role userRole = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new RuntimeException("Default role not found!"));
+                .orElseThrow(() -> new InvalidRoleException("Default role not found!"));
 
         AppUser user = AppUser.builder()
                 .username(request.getUsername())
